@@ -1,0 +1,287 @@
+/* 这个函数的目的  是为了方便编写与逻辑无关的 协助页面功能的js代码 */
+
+(function(win,$b){
+
+	var $e, each, find;
+
+	win.$b = $b;
+	
+	
+
+	find = function(selector){
+
+		if( jQuery  ) return $(selector);
+
+		if(document.querySelector) return document.querySelector(selector);
+
+	}
+
+	document.onclick = function(e){
+
+		var _this = e.target;
+
+		each(_this);
+
+	}
+
+	each = function(_this){
+	
+		var item,eventName = _this.attributes;
+	
+		for(var i in eventName){
+		
+			if (eventName.hasOwnProperty(i) === true){  
+				item = eventName[i].localName;
+		
+				if(!clickEvent[item]) continue ;
+			
+				clickEvent[item](_this);            
+			}  
+			
+		}
+
+	}
+
+	clickEvent = {
+
+		"$click" : function(_this){
+
+			if(!_this) return ;
+
+			var onclick = _this.getAttribute("$click");
+
+			if(!onclick) return ;
+
+			if($b.isExist(onclick)) return $b.run(onclick,_this,[{event:this}]); 
+			
+			eval( "onclick =  function(){" + onclick + "}");
+
+			onclick.apply(_this,arguments);
+
+		},
+
+		"$click-cp" : function(_this){
+
+			var onclick = _this.getAttribute("$click-CP");
+
+			if( onclick === null ) return;
+
+			if( !onclick) {
+
+				_this = _this.parentElement;
+
+			}else{
+
+				for( ; ; ){
+
+					if(!_this) break;
+
+					_this = _this.parentElement;
+
+					if(!_this) break;
+
+					if(_this.className.replace(/\s{2,}/g," ").split(" ").indexOf(onclick) > -1){
+
+						break;
+
+					}
+
+				}
+
+			}
+
+			if(_this && _this.tagName) each(_this);
+
+		},
+
+		"$click-addclass": function(_this){
+
+			var onclick = _this.getAttribute("$click-addClass");
+
+			if(!onclick) return;
+
+			if(_this.className.replace(/\s{2,}/g," ").split(" ").indexOf(onclick) < 0){
+
+				_this.className += " " + onclick;
+
+			}
+
+		},
+
+		"$click-reomveclass": function(_this){
+
+			var onclick = _this.getAttribute("$click-reomveClass");
+
+			if(!onclick) return;
+
+			var classArray = _this.className.replace(/\s{2,}/g," ").split(" ");
+
+			var index = classArray.indexOf(onclick);
+
+			if(index > -1){
+
+				classArray.splice(index,1);
+				_this.className = classArray.join(" ");
+
+			}
+
+		},
+
+		"$click-togclass": function(_this){
+
+			var onclick = _this.getAttribute("$click-togClass");
+
+			if(!onclick) return;
+
+			var classArray = _this.className.replace(/\s{2,}/g," ").split(" ");
+
+			var index = classArray.indexOf(onclick);
+
+			if(index < 0){
+
+				_this.className += " " + onclick;
+
+			}else{
+
+				classArray.splice(index,1);
+				_this.className = classArray.join(" ");
+
+			}
+
+		},
+		
+		"$click-onlytogclass" : function(_this){
+			
+			var item,clas,index;
+			
+			var onclick = _this.getAttribute("$click-onlytogclass");
+			
+			if(!onclick ) return ;
+			
+			clas = _this.className.replace(/\s{2,}/g," ").split(" ");
+				
+			index = clas.indexOf(onclick);
+			
+			if(index > -1){
+				clas.splice(index,1);
+				_this.className = clas.join(" ");
+				
+			}else{
+				
+				var parent = _this.parentElement;
+			
+				var children = parent.children;
+				
+				for(var i = 0,len = children.length;i<len;i++){
+					
+					item = children[i];
+					
+					clas = item.className.replace(/\s{2,}/g," ").split(" ");
+					
+					index = clas.indexOf(onclick);
+					
+					if(index > -1){
+						clas.splice(index,1);
+						item.className = clas.join(" ");
+						
+					}
+					
+				}
+				
+				_this.className += " " + onclick;
+			
+			}
+			
+			
+			
+			
+		}
+		,
+
+		"$click-$slidetoggle" : function(_this){
+
+			var onclick = _this.getAttribute("$click-$slideToggle");
+
+			if(!onclick) return ;
+		
+			if(typeof $ != 'undefined'){
+
+				$(onclick).slideToggle();
+
+			}
+
+		},
+
+		"$click-$btngroup" : function(_this){
+
+
+
+		},
+		
+		"$click-$show" : function(_this){
+			
+			var onclick = _this.getAttribute("$click-$show");
+
+			if(!onclick) return ;
+			
+			if(typeof $ != 'undefined'){
+				
+				$(onclick).show();
+
+			}
+			
+		},
+		
+		"$click-$hide" : function(_this){
+			
+			var onclick = _this.getAttribute("$click-$hide");
+
+			if(!onclick) return ;
+			
+			if(typeof $ != 'undefined'){	
+				
+				$(onclick).hide();
+
+			}
+			
+		},
+		
+		"$click-imgplace" : function( _this ){
+			
+			var srcPath = "srcPath";
+			
+			var onclick = _this.getAttribute("$click-imgPlace");
+			
+			if(onclick == null) return;
+			
+			_this = find(onclick)[0] || _this;
+
+			var src = _this.getAttribute(srcPath);
+			
+			_this.setAttribute(srcPath,_this.src);
+			
+			_this.src = src ;
+
+		}
+	};
+
+})(
+window,
+function(){
+	
+	var $b = {};
+	
+	/*用来存放一些特殊的函数提供调用
+	* 竟可能的不要涉及到逻辑 
+	*/
+	var event = {};
+	
+	$b.add = function(name,even){ event[name] = even; }
+	$b.run = function(name,_this,param) { var $e = _this || this; event[name].apply($e,param); }
+	$b.removeByName = function(name){ delete event[name] };
+	$b.isExist = function(name){ return !!event[name]; }
+	
+	return $b;
+	
+}()
+)
