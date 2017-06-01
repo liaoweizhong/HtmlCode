@@ -4,3 +4,17 @@ $click = " console.log("写出执行代码") "
 //这个不需要填写值  表示冒泡 
 $click-cp
 
+//添加class 值为添加的class
+$click-addclass
+$click-removeclass
+//这个是可以判断你是否交替添加删除当前class
+$click-togclass
+//这个可以添加class的同时清除掉同级别的其他兄弟dom的class
+$click-onlytogclass
+//关联值得隐藏消失  $(值) 有$符号的表示需要引用$才能使用
+$click-$slidetoggle
+
+//可以与制定值得img对象src交替变化
+$click-imgplace
+
+20170601
