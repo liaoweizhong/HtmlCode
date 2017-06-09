@@ -1,9 +1,11 @@
 /* 这个函数的目的  是为了方便编写与逻辑无关的 协助页面功能的js代码 */
 
-(function(win,$b){
+(function(win,$b,even){
 
 	var $e, each, find;
 
+	$b.even = new even();
+	
 	win.$b = $b;
 	
 	
@@ -19,14 +21,24 @@
 	document.onclick = function(e){
 
 		var _this = e.target;
+		
+		for( ; ; ){
 
-		each(_this);
+			if(each(_this)) return;
 
+			_this = _this.parentElement;
+
+			if(!_this) break;
+
+		}
+		
 	}
 
 	each = function(_this){
 	
 		var item,eventName = _this.attributes;
+	
+		var ret = false;
 	
 		for(var i in eventName){
 		
@@ -35,10 +47,14 @@
 		
 				if(!clickEvent[item]) continue ;
 			
-				clickEvent[item](_this);            
+				clickEvent[item](_this);  
+
+				ret = true;
 			}  
 			
 		}
+		
+		return ret;
 
 	}
 
@@ -54,9 +70,9 @@
 
 			if($b.isExist(onclick)) return $b.run(onclick,_this,[{event:this}]); 
 			
-			eval( "onclick =  function(){" + onclick + "}");
-
-			onclick.apply(_this,arguments);
+			eval( "onclick =  function(clickEvent){" + onclick + "}");
+			
+			onclick.apply(_this,[this]);
 
 		},
 
@@ -191,12 +207,7 @@
 				_this.className += " " + onclick;
 			
 			}
-			
-			
-			
-			
-		}
-		,
+		},
 
 		"$click-$slidetoggle" : function(_this){
 
@@ -236,7 +247,9 @@
 			
 			var onclick = _this.getAttribute("$click-$hide");
 
-			if(!onclick) return ;
+			if(onclick != null) return ;
+			
+			if(onclick == "") onclick = _this;
 			
 			if(typeof $ != 'undefined'){	
 				
@@ -269,19 +282,166 @@
 window,
 function(){
 	
-	var $b = {};
+	//事件委托机制
+	var xid = ".delegation";
 	
-	/*用来存放一些特殊的函数提供调用
-	* 竟可能的不要涉及到逻辑 
-	*/
-	var event = {};
+	var F = {};
 	
-	$b.add = function(name,even){ event[name] = even; }
-	$b.run = function(name,_this,param) { var $e = _this || this; event[name].apply($e,param); }
-	$b.removeByName = function(name){ delete event[name] };
-	$b.isExist = function(name){ return !!event[name]; }
+	$(function(){
+
+		$(xid).on("click",function(event){
+			
+			var _this = event.target;
+			
+			var name;
+			
+			for( ; ; ){
+
+				name = _this.getAttribute("$event");
+			
+				if(name) {
+					
+					if(F[name]) F[name].apply(_this,[event,this]);
+					break;
+					
+				}
+
+				_this = _this.parentElement;
+
+				if(!_this) break;
+
+				if(_this.className.replace(/\s{2,}/g," ").split(" ").indexOf(onclick) > -1){
+
+					break;
+
+				}
+
+			}
+			
+		})
+		
+	})
 	
-	return $b;
+	return F;
+	
+}(),
+function(){
+	
+	//组件插件
+	var _this = {};;
+	
+	//遮罩
+	_this.Cover = new function(){
+		
+		this.__Element;
+		
+		this.__showElement;
+		
+		this.__createElement = function(){
+			
+			var d = document.createElement("div");
+			d.style.cssText += "top: 0;position:absolute;width:100%;height:100%;background-color:rgba(105, 101, 101, 0.7);z-index: 9999999;";
+			this.__Element = d;
+			document.body.appendChild(d);
+			
+			return d;
+			
+		};
+		
+		this.show = function(elem){
+			
+			var e = this.__Element || this.__createElement();
+
+			e.style.display = "block";
+			
+			if(!elem) return ;
+			
+			elem.$zIndex = elem.style.zIndex;
+			
+			elem.style.zIndex = "10000000";
+			
+			this.__showElement = elem;
+			
+		};
+		
+		this.hide = function(){
+			
+			if(!this.__Element) return;
+			
+			this.__Element.style.display = "none";
+			
+			var e = this.__showElement;
+
+			if(!e) return;
+			
+			e.style.zIndex = e.$zIndex;
+			
+		};
+		
+	}();
+
+	return _this;
+	
+},
+function(){
+	
+	/*委托加载触摸变化事件*/
+	$(function(){
+	
+		var Xid = ".touchParent";
+		
+		var pro = {
+			
+			mouseenter : "m_style",
+		
+			mouseleave : "l_style"
+		}
+	
+	
+		var o = $(".touchParent").children();
+		
+		var mouse = function(event){
+			
+			var type = pro[event.type];
+			
+			var _this = $(this);
+			
+			var paren = _this.parent();
+			
+			eval("var style = " + paren.attr(type));
+			
+			for( var u in style){
+				
+				var v = style[u];
+				_this.css(u,v);
+				
+			}
+			
+			eval("style = " + _this.attr(type));
+			
+			if(style){
+				
+				for( var u in style){
+				
+					var v = style[u];
+					_this.css(u,v);
+					
+				}
+				
+			}
+			
+		}
+		
+		o.mouseenter(mouse);
+		o.mouseleave(mouse);
+		
+		
+		o = $(".tUnit");
+		o.mouseenter(mouse);
+		o.mouseleave(mouse);
+	})
 	
 }()
+
 )
+
