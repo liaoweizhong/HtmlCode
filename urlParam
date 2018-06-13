@@ -1,0 +1,19 @@
+(function(w,url){
+
+    w.param = {};
+
+    url = url.substring(1,url.length);
+
+    url = url.split("&");
+
+    for(var i in url){
+
+        var it = url[i];
+
+        it = it.split("=");
+
+        w.param[it[0]]= decodeURI(url[i].substring(it[0].length+1,url[i].length));
+		
+    }
+
+})(window,location.search)
